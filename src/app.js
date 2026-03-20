@@ -46,7 +46,7 @@ const app = express();
 // Middleware
 const allowedOrigins = (
   process.env.FRONTEND_URLS ||
-  `${env.FRONTEND_URL},http://localhost:3000,https://frontendphase2.vercel.app`
+  `${env.FRONTEND_URL},http://localhost:3000,http://localhost:3001,https://frontendphase2.vercel.app,https://phase2.saasab2e.com`
 )
   .split(',')
   .map((v) => v.trim())
