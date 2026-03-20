@@ -26,8 +26,16 @@ export const jobService = {
 
     const where = {};
     if (status) where.status = status;
-    if (clientId) where.clientId = clientId;
-    if (assignedToId) where.assignedToId = assignedToId;
+
+    // Some legacy rows may exist with `clientId: null`.
+    // `Job.clientId` is optional in Prisma now, so we should avoid filtering logic.
+    // Also sanitize query values like the string "null".
+    const safeClientId = clientId && clientId !== 'null' ? clientId : undefined;
+    const safeAssignedToId = assignedToId && assignedToId !== 'null' ? assignedToId : undefined;
+
+    if (safeClientId) where.clientId = safeClientId;
+
+    if (safeAssignedToId) where.assignedToId = safeAssignedToId;
     if (search) {
       where.title = { contains: search, mode: 'insensitive' };
     }

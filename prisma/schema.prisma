@@ -401,9 +401,10 @@ enum CandidateStatus {
 
 model Candidate {
   id             String          @id @default(auto()) @map("_id") @db.ObjectId
-  firstName      String
-  lastName       String
-  email          String          @unique
+  // Legacy Mongo rows may contain nulls; make nullable to prevent Prisma conversion crashes.
+  firstName      String?
+  lastName       String?
+  email          String?         @unique
   phone          String?
   linkedIn       String?
   resume         String?
@@ -424,8 +425,8 @@ model Candidate {
   assignedJobs   String[] // Array of job IDs
   stage          String? // Applied, Shortlist, Screening, Interviewing, Offered, Hired, Rejected
   lastActivity   DateTime?
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
+  createdAt      DateTime?
+  updatedAt      DateTime?
 
   // Embedded salary
   salary Json?
@@ -490,7 +491,9 @@ model Job {
   location            String?
   type                JobType   @default(FULL_TIME)
   status              JobStatus @default(DRAFT)
-  clientId            String    @db.ObjectId
+  // Some legacy rows may exist with `clientId: null` (after schema evolution).
+  // Make it optional so listing jobs doesn't crash.
+  clientId            String?   @db.ObjectId
   assignedToId        String?   @db.ObjectId
   openings            Int       @default(1)
   // Extended fields from frontend (ClientDetailsDrawer Jobs tab)
@@ -522,14 +525,15 @@ model Job {
   applicationFormLogo String? // Logo option: account, company, none
   applicationFormQuestions String[] @default([]) // Array of custom application form questions
   applicationFormNote String? // Note for candidates
-  createdAt           DateTime  @default(now())
-  updatedAt           DateTime  @updatedAt
+  // Legacy documents may contain null timestamps; make optional to avoid Prisma conversion crashes.
+  createdAt           DateTime? @default(now())
+  updatedAt           DateTime? @updatedAt
 
   // Embedded salary
   salary Json?
 
   // Relations
-  client         Client          @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  client         Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
   assignedTo     User?           @relation("JobAssignee", fields: [assignedToId], references: [id])
   pipelineStages PipelineStage[]
   matches        Match[]
