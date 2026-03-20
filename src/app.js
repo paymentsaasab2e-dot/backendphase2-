@@ -4,6 +4,7 @@ import morgan from 'morgan';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { errorMiddleware } from './middleware/error.middleware.js';
+import { env } from './config/env.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -43,7 +44,23 @@ import linkedinRoutes from './modules/linkedin/linkedin.routes.js';
 const app = express();
 
 // Middleware
-app.use(cors());
+const allowedOrigins = (
+  process.env.FRONTEND_URLS ||
+  `${env.FRONTEND_URL},http://localhost:3000,https://frontendphase2.vercel.app`
+)
+  .split(',')
+  .map((v) => v.trim())
+  .filter(Boolean);
+
+app.use(cors({
+  origin(origin, callback) {
+    // Allow server-to-server / curl requests without Origin header
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS blocked for origin: ${origin}`));
+  },
+  credentials: true,
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
